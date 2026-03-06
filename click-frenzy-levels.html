@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLICK FRENZY — 15 Levels</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Barlow+Condensed:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07090e;
+  --c1: #00f5ff;
+  --c2: #ff003c;
+  --c3: #ffe600;
+  --c4: #00ff88;
+  --c5: #ff6a00;
+  --card: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.1);
+  --lvl-color: #00f5ff;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  font-family: 'Barlow Condensed', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: crosshair;
+  color: white;
+}
+
+/* Grid BG */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 44px 44px;
+  animation: gridMove 24s linear infinite;
+  pointer-events:none;
+}
+@keyframes gridMove { to { transform: translateY(44px); } }
+
+/* Scanlines */
+body::after {
+  content:'';
+  position:fixed; inset:0;
+  background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px);
+  pointer-events:none; z-index:9999;
+}
+
+/* ── SCREENS ── */
+.screen {
+  position: fixed; inset:0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 24px;
+  padding: 20px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.35s;
+  z-index: 100;
+}
+.screen.active { opacity:1; pointer-events:all; }
+
+/* ── TITLE SCREEN ── */
+#screen-title { gap: 16px; }
+
+.logo {
+  font-family: 'Black Ops One', cursive;
+  font-size: clamp(48px, 11vw, 82px);
+  color: var(--c1);
+  text-shadow: 0 0 12px var(--c1), 0 0 40px var(--c1), 0 0 80px rgba(0,245,255,0.4);
+  text-align: center;
+  animation: logoPulse 3s ease-in-out infinite;
+  line-height: 1;
+}
+@keyframes logoPulse {
+  0%,100%{text-shadow:0 0 12px var(--c1),0 0 40px var(--c1),0 0 80px rgba(0,245,255,0.4);}
+  50%{text-shadow:0 0 20px var(--c1),0 0 60px var(--c1),0 0 120px rgba(0,245,255,0.7);}
+}
+.logo-sub {
+  font-size:12px; letter-spacing:8px; color:rgba(0,245,255,0.45);
+  text-transform:uppercase; text-align:center;
+}
+
+.levels-preview {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  width: 100%;
+  max-width: 420px;
+}
+.lp-cell {
+  aspect-ratio:1;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-family: 'Black Ops One', cursive;
+  font-size: 16px;
+  color: rgba(255,255,255,0.2);
+  background: var(--card);
+  transition: all 0.2s;
+  cursor: default;
+}
+.lp-cell.done {
+  border-color: rgba(0,255,136,0.5);
+  background: rgba(0,255,136,0.07);
+  color: var(--c4);
+}
+.lp-cell.current {
+  border-color: var(--c1);
+  background: rgba(0,245,255,0.1);
+  color: var(--c1);
+  box-shadow: 0 0 14px rgba(0,245,255,0.3);
+  animation: cellPulse 1.5s ease-in-out infinite;
+}
+@keyframes cellPulse {
+  0%,100%{box-shadow:0 0 14px rgba(0,245,255,0.3);}
+  50%{box-shadow:0 0 28px rgba(0,245,255,0.6);}
+}
+.lp-cell-label { font-size:8px; letter-spacing:2px; color:inherit; opacity:0.6; }
+
+/* ── LEVEL INTRO SCREEN ── */
+#screen-intro { gap: 12px; }
+
+.intro-badge {
+  font-family: 'Black Ops One', cursive;
+  font-size: 11px;
+  letter-spacing: 5px;
+  color: var(--lvl-color);
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.intro-level-num {
+  font-family: 'Black Ops One', cursive;
+  font-size: clamp(72px,16vw,120px);
+  color: var(--lvl-color);
+  text-shadow: 0 0 30px var(--lvl-color), 0 0 80px color-mix(in srgb, var(--lvl-color) 50%, transparent);
+  line-height: 0.9;
+  text-align: center;
+}
+.intro-name {
+  font-family: 'Black Ops One', cursive;
+  font-size: clamp(20px,5vw,34px);
+  color: white;
+  letter-spacing: 3px;
+  text-align: center;
+}
+.intro-stats {
+  display: flex;
+  gap: 32px;
+  margin-top: 8px;
+}
+.intro-stat {
+  text-align: center;
+}
+.intro-stat-val {
+  font-family: 'Black Ops One', cursive;
+  font-size: 36px;
+  display: block;
+  color: var(--lvl-color);
+  text-shadow: 0 0 15px color-mix(in srgb, var(--lvl-color) 60%, transparent);
+}
+.intro-stat-lbl {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+}
+.intro-desc {
+  font-size: 14px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 2px;
+  text-align: center;
+  max-width: 380px;
+  line-height: 1.5;
+}
+.intro-modifiers {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.modifier-tag {
+  font-size: 10px;
+  letter-spacing: 3px;
+  padding: 5px 12px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  border: 1px solid;
+}
+.mod-move { border-color: rgba(255,106,0,0.6); color: var(--c5); background: rgba(255,106,0,0.08); }
+.mod-shrink { border-color: rgba(255,0,60,0.6); color: var(--c2); background: rgba(255,0,60,0.08); }
+.mod-chaos { border-color: rgba(255,230,0,0.6); color: var(--c3); background: rgba(255,230,0,0.08); }
+.mod-fast { border-color: rgba(0,245,255,0.6); color: var(--c1); background: rgba(0,245,255,0.08); }
+
+/* ── GAME SCREEN ── */
+#screen-game {
+  gap: 0;
+  justify-content: flex-start;
+  padding-top: 20px;
+}
+
+.hud {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+
+.hud-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hud-level {
+  font-family: 'Black Ops One', cursive;
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: var(--lvl-color);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--lvl-color) 60%, transparent);
+}
+
+.hud-title {
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: rgba(255,255,255,0.25);
+  text-transform: uppercase;
+}
+
+.hud-hearts {
+  display: flex;
+  gap: 4px;
+  font-size: 16px;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr 1px 1fr;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+.stat { padding: 10px 8px; text-align: center; }
+.stat-div { background: var(--border); }
+.stat-lbl { font-size: 9px; letter-spacing: 3px; color: rgba(255,255,255,0.25); text-transform: uppercase; margin-bottom: 2px; }
+.stat-val { font-family: 'Black Ops One', cursive; font-size: 28px; line-height: 1; }
+#hud-clicks { color: var(--c1); text-shadow: 0 0 12px rgba(0,245,255,0.5); }
+#hud-time   { color: var(--c2); text-shadow: 0 0 12px rgba(255,0,60,0.5); }
+#hud-cps    { color: var(--c3); text-shadow: 0 0 10px rgba(255,230,0,0.4); }
+
+.progress-wrap { position: relative; }
+.progress-bg {
+  height: 6px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 0;
+  transition: width 0.08s linear;
+  position: relative;
+  background: linear-gradient(90deg, var(--lvl-color), color-mix(in srgb, var(--lvl-color) 60%, white));
+  box-shadow: 0 0 8px var(--lvl-color);
+}
+.progress-fill::after {
+  content:''; position:absolute; right:0; top:0; height:100%; width:16px;
+  background: white; filter: blur(3px); opacity: 0.5;
+}
+.progress-label {
+  position: absolute;
+  right: 0; top: -18px;
+  font-size: 10px; letter-spacing: 2px; color: rgba(255,255,255,0.25);
+}
+
+/* Game area */
+.game-area {
+  flex: 1;
+  width: 100%;
+  max-width: 560px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 20px;
+}
+
+/* The click button */
+.click-btn {
+  position: absolute;
+  border-radius: 50%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none; -webkit-user-select: none;
+  transition: transform 0.05s, box-shadow 0.05s;
+  border: 2px solid var(--lvl-color);
+  background: radial-gradient(circle at 38% 35%, color-mix(in srgb, var(--lvl-color) 20%, transparent), color-mix(in srgb, var(--lvl-color) 5%, transparent));
+  box-shadow: 0 0 20px color-mix(in srgb, var(--lvl-color) 35%, transparent), 0 0 60px color-mix(in srgb, var(--lvl-color) 10%, transparent);
+}
+.click-btn:active, .click-btn.flash {
+  transform: scale(0.91) !important;
+  box-shadow: 0 0 45px var(--lvl-color), 0 0 90px color-mix(in srgb, var(--lvl-color) 40%, transparent) !important;
+}
+.btn-text {
+  font-family: 'Black Ops One', cursive;
+  font-size: clamp(14px, 3.5vw, 22px);
+  color: var(--lvl-color);
+  letter-spacing: 2px;
+  pointer-events: none;
+  text-shadow: 0 0 8px var(--lvl-color);
+}
+.btn-sub {
+  font-size: clamp(8px, 1.5vw, 11px);
+  letter-spacing: 3px;
+  color: color-mix(in srgb, var(--lvl-color) 50%, transparent);
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+/* Ripple */
+.ripple {
+  position: absolute; border-radius: 50%;
+  background: color-mix(in srgb, var(--lvl-color) 30%, transparent);
+  animation: rippleAnim 0.4s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes rippleAnim {
+  from{transform:scale(0);opacity:1;}
+  to{transform:scale(2.5);opacity:0;}
+}
+
+/* Float +1 */
+.float-num {
+  position: fixed;
+  font-family: 'Black Ops One', cursive;
+  font-size: 18px;
+  color: var(--c3);
+  text-shadow: 0 0 8px rgba(255,230,0,0.7);
+  pointer-events:none; z-index:1000;
+  animation: floatUp 0.7s ease-out forwards;
+}
+@keyframes floatUp {
+  0%{opacity:1;transform:translateY(0) scale(1);}
+  100%{opacity:0;transform:translateY(-65px) scale(0.5);}
+}
+
+/* ── LEVEL CLEAR SCREEN ── */
+#screen-clear { gap: 14px; }
+
+.clear-badge {
+  font-size: 11px; letter-spacing: 5px;
+  color: var(--c4); text-transform: uppercase; opacity: 0.7;
+}
+.clear-title {
+  font-family: 'Black Ops One', cursive;
+  font-size: clamp(40px, 10vw, 70px);
+  color: var(--c4);
+  text-shadow: 0 0 20px var(--c4), 0 0 60px rgba(0,255,136,0.5);
+  animation: clearPulse 1.5s ease-in-out infinite;
+  line-height: 1;
+}
+@keyframes clearPulse {
+  0%,100%{text-shadow:0 0 20px var(--c4),0 0 60px rgba(0,255,136,0.5);}
+  50%{text-shadow:0 0 40px var(--c4),0 0 100px rgba(0,255,136,0.8);}
+}
+.clear-score-row {
+  display: flex; gap: 36px;
+}
+.clear-stat-val {
+  font-family: 'Black Ops One', cursive;
+  font-size: 40px; display: block;
+}
+.cv-clicks { color: var(--c1); }
+.cv-cps    { color: var(--c3); }
+.cv-time   { color: var(--c2); }
+.clear-stat-lbl {
+  font-size:10px; letter-spacing:3px; color:rgba(255,255,255,0.3); text-transform:uppercase;
+}
+.stars-row {
+  display: flex; gap: 8px; font-size: 32px;
+}
+.next-btn {
+  margin-top: 8px;
+  padding: 16px 44px;
+  background: transparent;
+  border: 2px solid var(--c4);
+  color: var(--c4);
+  font-family: 'Black Ops One', cursive;
+  font-size: 20px; letter-spacing: 5px;
+  cursor: pointer; border-radius: 2px;
+  transition: all 0.2s;
+  box-shadow: 0 0 18px rgba(0,255,136,0.2);
+}
+.next-btn:hover {
+  background: rgba(0,255,136,0.12);
+  box-shadow: 0 0 36px rgba(0,255,136,0.45);
+  transform: translateY(-2px);
+}
+
+/* ── FAIL SCREEN ── */
+#screen-fail { gap: 14px; }
+
+.fail-title {
+  font-family: 'Black Ops One', cursive;
+  font-size: clamp(40px, 10vw, 70px);
+  color: var(--c2);
+  text-shadow: 0 0 20px var(--c2), 0 0 60px rgba(255,0,60,0.5);
+  line-height: 1; text-align: center;
+}
+.fail-msg { font-size:15px; letter-spacing:3px; color:rgba(255,255,255,0.35); text-align:center; }
+.fail-got { font-family:'Black Ops One',cursive; font-size:28px; color:rgba(255,0,60,0.7); }
+.fail-needed { font-size:12px; letter-spacing:3px; color:rgba(255,255,255,0.2); text-transform:uppercase; }
+.retry-btn, .restart-btn {
+  padding: 14px 40px;
+  background: transparent;
+  border: 2px solid var(--c2);
+  color: var(--c2);
+  font-family: 'Black Ops One', cursive;
+  font-size: 18px; letter-spacing: 5px;
+  cursor: pointer; border-radius: 2px;
+  transition: all 0.2s;
+}
+.retry-btn:hover, .restart-btn:hover {
+  background: rgba(255,0,60,0.1);
+  box-shadow: 0 0 28px rgba(255,0,60,0.4);
+}
+.restart-btn { border-color:rgba(255,255,255,0.2); color:rgba(255,255,255,0.3); font-size:14px; padding:10px 28px; }
+.restart-btn:hover { background:rgba(255,255,255,0.05); box-shadow:none; }
+
+/* ── VICTORY SCREEN ── */
+#screen-victory { gap: 16px; }
+
+.victory-crown { font-size: 72px; animation: crownBounce 0.6s cubic-bezier(0.175,0.885,0.32,1.275); }
+@keyframes crownBounce { from{transform:scale(0) rotate(-20deg);} to{transform:scale(1) rotate(0);} }
+.victory-title {
+  font-family: 'Black Ops One', cursive;
+  font-size: clamp(44px, 12vw, 88px);
+  color: var(--c3);
+  text-shadow: 0 0 20px var(--c3), 0 0 70px rgba(255,230,0,0.6);
+  text-align: center; line-height: 1;
+  animation: vicPulse 1.5s ease-in-out infinite;
+}
+@keyframes vicPulse {
+  0%,100%{text-shadow:0 0 20px var(--c3),0 0 70px rgba(255,230,0,0.6);}
+  50%{text-shadow:0 0 40px var(--c3),0 0 120px rgba(255,230,0,0.9);}
+}
+.victory-sub { font-size:13px; letter-spacing:6px; color:rgba(255,230,0,0.5); text-align:center; }
+.victory-stats {
+  display: grid; grid-template-columns:1fr 1fr;
+  gap:12px; width:100%; max-width:380px;
+}
+.vstats-cell {
+  background: var(--card); border:1px solid var(--border);
+  border-radius:3px; padding:14px; text-align:center;
+}
+.vstats-val { font-family:'Black Ops One',cursive; font-size:32px; color:var(--c3); display:block; }
+.vstats-lbl { font-size:9px; letter-spacing:3px; color:rgba(255,255,255,0.25); text-transform:uppercase; }
+.play-again-btn {
+  padding: 16px 44px;
+  background: transparent;
+  border: 2px solid var(--c3);
+  color: var(--c3);
+  font-family: 'Black Ops One', cursive;
+  font-size: 20px; letter-spacing: 5px;
+  cursor: pointer; border-radius: 2px;
+  transition: all 0.2s;
+  box-shadow: 0 0 20px rgba(255,230,0,0.2);
+}
+.play-again-btn:hover {
+  background: rgba(255,230,0,0.1);
+  box-shadow: 0 0 40px rgba(255,230,0,0.45);
+  transform: translateY(-2px);
+}
+
+/* ── BAN SCREEN ── */
+#screen-ban { gap: 14px; }
+.ban-icon { font-size: 68px; animation: banBounce 0.5s cubic-bezier(0.175,0.885,0.32,1.275); }
+@keyframes banBounce { from{transform:scale(0)rotate(-20deg);} to{transform:scale(1);} }
+.ban-title {
+  font-family: 'Black Ops One', cursive;
+  font-size: clamp(52px,14vw,90px);
+  color: var(--c2);
+  text-shadow: 0 0 20px var(--c2), 0 0 70px rgba(255,0,60,0.6);
+  animation: banFlash 0.9s ease-in-out infinite alternate;
+  line-height:1;
+}
+@keyframes banFlash {
+  from{text-shadow:0 0 20px var(--c2),0 0 70px rgba(255,0,60,0.6);}
+  to{text-shadow:0 0 40px var(--c2),0 0 120px rgba(255,0,60,0.9);}
+}
+.ban-sub { font-size:12px; letter-spacing:6px; color:rgba(255,0,60,0.55); text-transform:uppercase; margin-top:-10px; }
+.ban-box {
+  border:1px solid rgba(255,0,60,0.35); background:rgba(255,0,60,0.05);
+  padding:12px 28px; border-radius:2px; text-align:center; max-width:400px;
+}
+.ban-reason-lbl { font-size:9px; letter-spacing:4px; color:rgba(255,0,60,0.5); text-transform:uppercase; margin-bottom:5px; }
+.ban-reason-txt { font-family:'Black Ops One',cursive; font-size:15px; color:var(--c2); letter-spacing:2px; }
+.ban-detail-txt { font-size:12px; color:rgba(255,255,255,0.3); line-height:1.6; letter-spacing:1px; margin-top:8px; }
+.ban-fair-btn {
+  padding:14px 40px; background:transparent;
+  border:2px solid var(--c2); color:var(--c2);
+  font-family:'Black Ops One',cursive; font-size:18px; letter-spacing:5px;
+  cursor:pointer; border-radius:2px; transition:all 0.2s;
+  margin-top:8px;
+}
+.ban-fair-btn:hover { background:rgba(255,0,60,0.1); box-shadow:0 0 28px rgba(255,0,60,0.4); }
+
+/* ── Start btn ── */
+.start-btn {
+  width: 100%; max-width: 420px;
+  padding: 18px;
+  background: transparent;
+  border: 2px solid var(--c1);
+  color: var(--c1);
+  font-family: 'Black Ops One', cursive;
+  font-size: 22px; letter-spacing: 6px;
+  cursor: pointer; border-radius: 2px;
+  transition: all 0.2s;
+  box-shadow: 0 0 20px rgba(0,245,255,0.2);
+}
+.start-btn:hover {
+  background: rgba(0,245,255,0.1);
+  box-shadow: 0 0 40px rgba(0,245,255,0.4);
+  transform: translateY(-1px);
+}
+
+/* Timer low warning */
+.time-warn #hud-time { animation: timeFlash 0.35s ease-in-out infinite; }
+@keyframes timeFlash { 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+
+/* Confetti */
+.confetti-piece {
+  position:fixed; pointer-events:none; z-index:9000;
+  animation: cfFall linear forwards;
+}
+@keyframes cfFall {
+  0%{transform:translateY(-20px) rotate(0deg); opacity:1;}
+  100%{transform:translateY(110vh) rotate(720deg); opacity:0;}
+}
+
+/* AC warning toast */
+.ac-warn-toast {
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  background:rgba(255,0,60,0.12); border:1px solid rgba(255,0,60,0.5);
+  color:var(--c2); font-size:13px; letter-spacing:3px;
+  padding:10px 24px; border-radius:2px; z-index:2000;
+  text-transform:uppercase; box-shadow:0 0 20px rgba(255,0,60,0.25);
+  animation: toastIn 0.3s ease;
+}
+@keyframes toastIn {
+  from{opacity:0;transform:translateX(-50%) translateY(10px);}
+  to{opacity:1;transform:translateX(-50%) translateY(0);}
+}
+
+@keyframes screenShake {
+  0%,100%{transform:translateX(0);}
+  20%{transform:translateX(-12px) rotate(-0.5deg);}
+  40%{transform:translateX(12px) rotate(0.5deg);}
+  60%{transform:translateX(-8px);}
+  80%{transform:translateX(8px);}
+}
+</style>
+</head>
+<body>
+
+<!-- ── TITLE SCREEN ── -->
+<div class="screen active" id="screen-title">
+  <div class="logo">CLICK<br>FRENZY</div>
+  <div class="logo-sub">15 levels of pure chaos</div>
+  <div class="levels-preview" id="levels-preview"></div>
+  <button class="start-btn" onclick="goToIntro()">▶ BEGIN CHALLENGE</button>
+</div>
+
+<!-- ── LEVEL INTRO SCREEN ── -->
+<div class="screen" id="screen-intro">
+  <div class="intro-badge" id="intro-badge">LEVEL 1</div>
+  <div class="intro-level-num" id="intro-num">01</div>
+  <div class="intro-name" id="intro-name">WARM UP</div>
+  <div class="intro-stats">
+    <div class="intro-stat">
+      <span class="intro-stat-val" id="intro-clicks">50</span>
+      <span class="intro-stat-lbl">Clicks to beat</span>
+    </div>
+    <div class="intro-stat">
+      <span class="intro-stat-val" id="intro-time">60s</span>
+      <span class="intro-stat-lbl">Time limit</span>
+    </div>
+  </div>
+  <div class="intro-modifiers" id="intro-mods"></div>
+  <div class="intro-desc" id="intro-desc">Get your fingers warm. This one's easy.</div>
+  <button class="start-btn" style="max-width:320px" onclick="startLevel()">▶ PLAY</button>
+</div>
+
+<!-- ── GAME SCREEN ── -->
+<div class="screen" id="screen-game">
+  <div class="hud">
+    <div class="hud-top">
+      <div class="hud-level" id="hud-level">LEVEL 1</div>
+      <div class="hud-title" id="hud-name">WARM UP</div>
+      <div class="hud-hearts" id="hud-hearts"></div>
+    </div>
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-lbl">Clicks</div>
+        <div class="stat-val" id="hud-clicks">0</div>
+      </div>
+      <div class="stat-div"></div>
+      <div class="stat">
+        <div class="stat-lbl">Time</div>
+        <div class="stat-val" id="hud-time">60</div>
+      </div>
+      <div class="stat-div"></div>
+      <div class="stat">
+        <div class="stat-lbl">CPS</div>
+        <div class="stat-val" id="hud-cps">0.0</div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label" id="progress-label">0 / 50</div>
+      <div class="progress-bg">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+  </div>
+  <div class="game-area" id="game-area">
+    <button class="click-btn" id="click-btn" onclick="registerClick(event)">
+      <div class="btn-text">CLICK!</div>
+      <div class="btn-sub" id="btn-sub">Go!</div>
+    </button>
+  </div>
+</div>
+
+<!-- ── LEVEL CLEAR SCREEN ── -->
+<div class="screen" id="screen-clear">
+  <div class="clear-badge" id="clear-badge">LEVEL 1 COMPLETE</div>
+  <div class="clear-title">CLEARED!</div>
+  <div class="stars-row" id="stars-row">⭐⭐⭐</div>
+  <div class="clear-score-row">
+    <div class="intro-stat">
+      <span class="clear-stat-val cv-clicks" id="clear-clicks">0</span>
+      <span class="clear-stat-lbl">Clicks</span>
+    </div>
+    <div class="intro-stat">
+      <span class="clear-stat-val cv-cps" id="clear-cps">0.0</span>
+      <span class="clear-stat-lbl">CPS</span>
+    </div>
+    <div class="intro-stat">
+      <span class="clear-stat-val cv-time" id="clear-time">0s</span>
+      <span class="clear-stat-lbl">Used</span>
+    </div>
+  </div>
+  <button class="next-btn" id="next-btn" onclick="nextLevel()">NEXT LEVEL ▶</button>
+</div>
+
+<!-- ── FAIL SCREEN ── -->
+<div class="screen" id="screen-fail">
+  <div class="intro-badge" style="color:var(--c2)" id="fail-badge">LEVEL 1 FAILED</div>
+  <div class="fail-title">FAILED</div>
+  <div class="fail-msg">You needed more clicks!</div>
+  <div>
+    <div class="fail-got" id="fail-got">0 / 50</div>
+    <div class="fail-needed">clicks achieved / needed</div>
+  </div>
+  <div style="display:flex;gap:12px;flex-direction:column;align-items:center;">
+    <button class="retry-btn" onclick="retryLevel()">↺ RETRY LEVEL</button>
+    <button class="restart-btn" onclick="fullRestart()">↩ BACK TO START</button>
+  </div>
+</div>
+
+<!-- ── VICTORY SCREEN ── -->
+<div class="screen" id="screen-victory">
+  <div class="victory-crown">👑</div>
+  <div class="victory-title">CHAMPION!</div>
+  <div class="victory-sub">ALL 15 LEVELS CONQUERED</div>
+  <div class="victory-stats" id="victory-stats"></div>
+  <button class="play-again-btn" onclick="fullRestart()">↺ PLAY AGAIN</button>
+</div>
+
+<!-- ── BAN SCREEN ── -->
+<div class="screen" id="screen-ban">
+  <div class="ban-icon">🚫</div>
+  <div class="ban-title">BANNED</div>
+  <div class="ban-sub">AUTO-CLICKER DETECTED</div>
+  <div class="ban-box">
+    <div class="ban-reason-lbl">VIOLATION</div>
+    <div class="ban-reason-txt" id="ban-reason">—</div>
+    <div class="ban-detail-txt" id="ban-detail">—</div>
+  </div>
+  <button class="ban-fair-btn" onclick="fullRestart()">↺ PLAY FAIR</button>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────
+// LEVEL DEFINITIONS  (15 levels)
+// targets: clicks needed  |  time: seconds
+// move: button moves  |  shrink: button smaller
+// chaos: random position jumps  |  speed: move speed
+// color: theme color for that level
+// ─────────────────────────────────────────────────
+const LEVELS = [
+  { n:1,  name:"WARM UP",       target:50,   time:60, size:180, move:false, chaos:false, speed:0,   color:"#00f5ff", desc:"Get your fingers loose. This one is on us.",             mods:[] },
+  { n:2,  name:"EASY PACE",     target:100,  time:60, size:170, move:false, chaos:false, speed:0,   color:"#00f5ff", desc:"Double the target. Still plenty of time.",              mods:[] },
+  { n:3,  name:"PICKING UP",    target:150,  time:55, size:160, move:false, chaos:false, speed:0,   color:"#00ddee", desc:"150 clicks, less time. Stay focused.",                  mods:[] },
+  { n:4,  name:"GETTING REAL",  target:200,  time:50, size:150, move:false, chaos:false, speed:0,   color:"#00bbcc", desc:"200 in 50 seconds. Fingers moving yet?",               mods:[] },
+  { n:5,  name:"SHIFTER",       target:220,  time:50, size:148, move:true,  chaos:false, speed:0.6, color:"#88ddff", desc:"The button now drifts. Keep your eyes on it.",          mods:["move"] },
+  { n:6,  name:"CHASER",        target:260,  time:48, size:142, move:true,  chaos:false, speed:1.0, color:"#ffaa00", desc:"Faster movement. More clicks. No mercy.",               mods:["move"] },
+  { n:7,  name:"SQUEEZER",      target:280,  time:45, size:120, move:true,  chaos:false, speed:1.2, color:"#ff8800", desc:"The button is shrinking. Hit it while you can.",        mods:["move","shrink"] },
+  { n:8,  name:"HYPERACTIVE",   target:310,  time:45, size:110, move:true,  chaos:false, speed:1.6, color:"#ff6600", desc:"Smaller, faster, tighter. Precision matters now.",      mods:["move","shrink"] },
+  { n:9,  name:"PHANTOM",       target:330,  time:42, size:100, move:true,  chaos:true,  speed:1.8, color:"#ff4400", desc:"The button teleports. Click wherever it lands.",        mods:["move","shrink","chaos"] },
+  { n:10, name:"RAMPAGE",       target:370,  time:40, size:96,  move:true,  chaos:true,  speed:2.2, color:"#ff2200", desc:"Absolute chaos. React fast or lose.",                  mods:["move","shrink","chaos","fast"] },
+  { n:11, name:"THE GRIND",     target:420,  time:38, size:90,  move:true,  chaos:true,  speed:2.5, color:"#ff003c", desc:"420 clicks. Grinding endurance to the limit.",          mods:["move","shrink","chaos","fast"] },
+  { n:12, name:"ASSASSIN",      target:460,  time:36, size:82,  move:true,  chaos:true,  speed:2.9, color:"#cc0044", desc:"Tiny button, blazing speed. Miss and it's over.",       mods:["move","shrink","chaos","fast"] },
+  { n:13, name:"NIGHTMARE",     target:520,  time:34, size:74,  move:true,  chaos:true,  speed:3.3, color:"#aa00aa", desc:"This is not human. But maybe you are different.",       mods:["move","shrink","chaos","fast"] },
+  { n:14, name:"HELLFIRE",      target:580,  time:30, size:66,  move:true,  chaos:true,  speed:3.8, color:"#8800cc", desc:"30 seconds. 580 clicks. A tiny target. God speed.",     mods:["move","shrink","chaos","fast"] },
+  { n:15, name:"FINAL BOSS",    target:650,  time:25, size:58,  move:true,  chaos:true,  speed:4.5, color:"#5500ff", desc:"650 in 25 seconds. The ultimate test of humanity.",     mods:["move","shrink","chaos","fast"] },
+];
+
+// ─────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────
+let currentLevel = 0; // 0-indexed
+let clicks = 0;
+let timeLeft = 0;
+let gameTimer = null;
+let moveAnim = null;
+let startTimestamp = null;
+let gameActive = false;
+let livesLeft = 3;
+let totalClicks = 0;
+let bestCps = 0;
+
+// Button motion state
+let btnX = 0, btnY = 0;
+let btnVX = 1.5, btnVY = 1.1;
+let lastChaos = 0;
+
+// Anti-cheat
+const AC = {
+  ts: [], pos: [], score: 0, warned: false,
+  MAX_CPS: 22, MIN_STD: 8, POS_VAR: 2, MIN: 5
+};
+
+// ─────────────────────────────────────────────────
+// SCREEN MANAGER
+// ─────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ─────────────────────────────────────────────────
+// TITLE SCREEN
+// ─────────────────────────────────────────────────
+function buildLevelsPreview() {
+  const container = document.getElementById('levels-preview');
+  container.innerHTML = '';
+  LEVELS.forEach((lvl, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'lp-cell' + (i < currentLevel ? ' done' : i === currentLevel ? ' current' : '');
+    cell.style.setProperty('--lvl-color', lvl.color);
+    if (i === currentLevel) cell.style.borderColor = lvl.color;
+    cell.innerHTML = `<span>${lvl.n}</span><span class="lp-cell-label">${i < currentLevel ? '✓' : ''}</span>`;
+    container.appendChild(cell);
+  });
+}
+
+// ─────────────────────────────────────────────────
+// INTRO SCREEN
+// ─────────────────────────────────────────────────
+function goToIntro() {
+  const lvl = LEVELS[currentLevel];
+  setLevelColor(lvl.color);
+
+  document.getElementById('intro-badge').textContent = `LEVEL ${lvl.n} OF 15`;
+  document.getElementById('intro-num').textContent = String(lvl.n).padStart(2,'0');
+  document.getElementById('intro-name').textContent = lvl.name;
+  document.getElementById('intro-clicks').textContent = lvl.target;
+  document.getElementById('intro-time').textContent = lvl.time + 's';
+  document.getElementById('intro-desc').textContent = lvl.desc;
+
+  const modsEl = document.getElementById('intro-mods');
+  modsEl.innerHTML = '';
+  lvl.mods.forEach(m => {
+    const tag = document.createElement('span');
+    tag.className = 'modifier-tag mod-' + m;
+    const labels = { move:'📍 Moving Button', shrink:'🔴 Smaller Button', chaos:'⚡ Teleports', fast:'🚀 High Speed' };
+    tag.textContent = labels[m] || m;
+    modsEl.appendChild(tag);
+  });
+
+  // Update hearts
+  updateHearts();
+
+  showScreen('screen-intro');
+}
+
+function setLevelColor(color) {
+  document.documentElement.style.setProperty('--lvl-color', color);
+}
+
+// ─────────────────────────────────────────────────
+// GAME START
+// ─────────────────────────────────────────────────
+function startLevel() {
+  const lvl = LEVELS[currentLevel];
+  setLevelColor(lvl.color);
+
+  clicks = 0;
+  timeLeft = lvl.time;
+  startTimestamp = Date.now();
+  gameActive = true;
+  AC.ts = []; AC.pos = []; AC.score = 0; AC.warned = false;
+
+  // HUD
+  document.getElementById('hud-level').textContent = `LEVEL ${lvl.n}`;
+  document.getElementById('hud-name').textContent = lvl.name;
+  updateHearts();
+  updateHUD();
+
+  // Button setup
+  const btn = document.getElementById('click-btn');
+  btn.style.width = btn.style.height = lvl.size + 'px';
+
+  const area = document.getElementById('game-area');
+  const aW = area.clientWidth, aH = area.clientHeight;
+  btnX = aW / 2 - lvl.size / 2;
+  btnY = aH / 2 - lvl.size / 2;
+  btnVX = lvl.speed * (Math.random() > 0.5 ? 1 : -1);
+  btnVY = lvl.speed * (Math.random() > 0.5 ? 1 : -1);
+  positionBtn();
+
+  document.getElementById('btn-sub').textContent = `${lvl.target} clicks needed`;
+
+  showScreen('screen-game');
+
+  // Game timer
+  gameTimer = setInterval(() => {
+    timeLeft--;
+    document.getElementById('hud-time').textContent = timeLeft;
+    if (timeLeft <= 5) document.getElementById('screen-game').classList.add('time-warn');
+    if (timeLeft <= 0) {
+      clearInterval(gameTimer);
+      stopMotion();
+      document.getElementById('screen-game').classList.remove('time-warn');
+      endLevel();
+    }
+  }, 1000);
+
+  // Motion
+  if (lvl.move) startMotion(lvl);
+}
+
+function positionBtn() {
+  const btn = document.getElementById('click-btn');
+  btn.style.left = btnX + 'px';
+  btn.style.top  = btnY + 'px';
+}
+
+function startMotion(lvl) {
+  lastChaos = Date.now();
+  const area = document.getElementById('game-area');
+
+  function loop() {
+    if (!gameActive) return;
+    const aW = area.clientWidth, aH = area.clientHeight;
+    const sz = lvl.size;
+
+    btnX += btnVX;
+    btnY += btnVY;
+
+    // Bounce
+    if (btnX <= 0)        { btnX = 0; btnVX = Math.abs(btnVX); }
+    if (btnX >= aW - sz)  { btnX = aW - sz; btnVX = -Math.abs(btnVX); }
+    if (btnY <= 0)        { btnY = 0; btnVY = Math.abs(btnVY); }
+    if (btnY >= aH - sz)  { btnY = aH - sz; btnVY = -Math.abs(btnVY); }
+
+    // Chaos teleport every 2-3s
+    if (lvl.chaos && Date.now() - lastChaos > 2200 + Math.random()*800) {
+      btnX = Math.random() * (aW - sz);
+      btnY = Math.random() * (aH - sz);
+      lastChaos = Date.now();
+      flashArea();
+    }
+
+    positionBtn();
+    moveAnim = requestAnimationFrame(loop);
+  }
+  moveAnim = requestAnimationFrame(loop);
+}
+
+function stopMotion() {
+  gameActive = false;
+  if (moveAnim) { cancelAnimationFrame(moveAnim); moveAnim = null; }
+}
+
+function flashArea() {
+  const area = document.getElementById('game-area');
+  area.style.background = 'rgba(255,255,255,0.03)';
+  setTimeout(() => area.style.background = '', 80);
+}
+
+// ─────────────────────────────────────────────────
+// CLICK HANDLER
+// ─────────────────────────────────────────────────
+function registerClick(e) {
+  if (!gameActive) return;
+  if (!checkAC(e)) return;
+
+  clicks++;
+  totalClicks++;
+  updateHUD();
+  doRipple(e, document.getElementById('click-btn'));
+  spawnFloat(e.clientX, e.clientY);
+}
+
+function updateHUD() {
+  const lvl = LEVELS[currentLevel];
+  document.getElementById('hud-clicks').textContent = clicks;
+  const elapsed = startTimestamp ? (Date.now() - startTimestamp) / 1000 : 0;
+  const cps = elapsed > 0 ? (clicks / elapsed).toFixed(1) : '0.0';
+  document.getElementById('hud-cps').textContent = cps;
+  if (parseFloat(cps) > bestCps) bestCps = parseFloat(cps);
+  const pct = Math.min(100, (clicks / lvl.target) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${clicks} / ${lvl.target}`;
+}
+
+function updateHearts() {
+  const el = document.getElementById('hud-hearts');
+  if (el) el.innerHTML = '❤️'.repeat(livesLeft) + '🖤'.repeat(Math.max(0, 3 - livesLeft));
+}
+
+function doRipple(e, btn) {
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  r.style.width = r.style.height = size + 'px';
+  r.style.left = (e.clientX - rect.left - size / 2) + 'px';
+  r.style.top  = (e.clientY - rect.top  - size / 2) + 'px';
+  btn.appendChild(r);
+  setTimeout(() => r.remove(), 400);
+  btn.classList.add('flash');
+  setTimeout(() => btn.classList.remove('flash'), 80);
+}
+
+function spawnFloat(x, y) {
+  const el = document.createElement('div');
+  el.className = 'float-num';
+  el.textContent = '+1';
+  el.style.left = (x - 15 + (Math.random() * 26 - 13)) + 'px';
+  el.style.top  = (y - 10) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 700);
+}
+
+// ─────────────────────────────────────────────────
+// END LEVEL
+// ─────────────────────────────────────────────────
+function endLevel() {
+  stopMotion();
+  clearInterval(gameTimer);
+  const lvl = LEVELS[currentLevel];
+  const elapsed = (Date.now() - startTimestamp) / 1000;
+  const finalCps = (clicks / elapsed).toFixed(1);
+
+  if (clicks >= lvl.target) {
+    // CLEARED
+    setLevelColor(lvl.color);
+    document.getElementById('clear-badge').textContent = `LEVEL ${lvl.n} COMPLETE`;
+    document.getElementById('clear-clicks').textContent = clicks;
+    document.getElementById('clear-cps').textContent = finalCps;
+    document.getElementById('clear-time').textContent = Math.round(elapsed) + 's';
+
+    // Stars
+    const over = clicks - lvl.target;
+    const stars = over >= lvl.target * 0.3 ? '⭐⭐⭐' : over >= lvl.target * 0.1 ? '⭐⭐' : '⭐';
+    document.getElementById('stars-row').textContent = stars;
+
+    const isLast = currentLevel === LEVELS.length - 1;
+    const nextBtn = document.getElementById('next-btn');
+    nextBtn.textContent = isLast ? '🏆 CLAIM VICTORY' : 'NEXT LEVEL ▶';
+    nextBtn.onclick = isLast ? showVictory : nextLevel;
+
+    if (!isLast) launchConfetti();
+    showScreen('screen-clear');
+  } else {
+    // FAILED
+    livesLeft--;
+    document.getElementById('fail-badge').textContent = `LEVEL ${lvl.n} FAILED`;
+    document.getElementById('fail-got').textContent = `${clicks} / ${lvl.target}`;
+    shakeScreen();
+    showScreen('screen-fail');
+  }
+}
+
+function nextLevel() {
+  currentLevel++;
+  buildLevelsPreview();
+  goToIntro();
+}
+
+function retryLevel() { goToIntro(); }
+
+function fullRestart() {
+  currentLevel = 0;
+  livesLeft = 3;
+  totalClicks = 0;
+  bestCps = 0;
+  buildLevelsPreview();
+  showScreen('screen-title');
+}
+
+function showVictory() {
+  launchConfetti();
+  const statsEl = document.getElementById('victory-stats');
+  statsEl.innerHTML = `
+    <div class="vstats-cell"><span class="vstats-val">${totalClicks}</span><span class="vstats-lbl">Total Clicks</span></div>
+    <div class="vstats-cell"><span class="vstats-val">${bestCps.toFixed(1)}</span><span class="vstats-lbl">Best CPS</span></div>
+    <div class="vstats-cell"><span class="vstats-val">${livesLeft}</span><span class="vstats-lbl">Lives Left</span></div>
+    <div class="vstats-cell"><span class="vstats-val">15</span><span class="vstats-lbl">Levels Beat</span></div>
+  `;
+  showScreen('screen-victory');
+  launchConfetti(); launchConfetti();
+}
+
+// ─────────────────────────────────────────────────
+// ANTI-CHEAT
+// ─────────────────────────────────────────────────
+function stdDev(arr) {
+  if (arr.length < 2) return 999;
+  const mean = arr.reduce((a,b)=>a+b,0)/arr.length;
+  return Math.sqrt(arr.reduce((s,v)=>s+(v-mean)**2,0)/arr.length);
+}
+
+function checkAC(e) {
+  const now = Date.now();
+  AC.ts.push(now);
+  AC.pos.push({ x: e.clientX||0, y: e.clientY||0 });
+
+  // Check 1: isTrusted
+  if (e.isTrusted === false) {
+    doBan('SYNTHETIC EVENT DETECTED', 'Programmatic click events are not trusted by the browser. Auto-clicker scripts are always caught this way.');
+    return false;
+  }
+
+  // Check 2: CPS burst
+  const burst = AC.ts.filter(t => t >= now - 1000).length;
+  if (burst > AC.MAX_CPS) {
+    AC.score += 30;
+    warnAC(`⚠ ${burst} clicks/sec detected`);
+    if (AC.score >= 60) { doBan('INHUMAN CLICK SPEED', `${burst} CPS exceeds the human physical limit of ~${AC.MAX_CPS} CPS.`); return false; }
+  }
+
+  const recent = AC.ts.slice(-20);
+  const recentPos = AC.pos.slice(-20);
+
+  if (recent.length >= AC.MIN) {
+    // Check 3: Robotic regularity
+    const intervals = [];
+    for (let i=1;i<recent.length;i++) intervals.push(recent[i]-recent[i-1]);
+    if (intervals.length >= 10 && stdDev(intervals) < AC.MIN_STD) {
+      AC.score += 25;
+      warnAC('⚠ Robot-like rhythm');
+      if (AC.score >= 50) { doBan('ROBOTIC CLICK PATTERN', `Click intervals have σ=${stdDev(intervals).toFixed(1)}ms — indistinguishable from an auto-clicker.`); return false; }
+    }
+
+    // Check 4: Position lock
+    if (recentPos.length >= 15) {
+      const xd = stdDev(recentPos.map(p=>p.x));
+      const yd = stdDev(recentPos.map(p=>p.y));
+      if (xd < AC.POS_VAR && yd < AC.POS_VAR) {
+        doBan('IDENTICAL CLICK COORDINATES', `All clicks at same pixel (X σ=${xd.toFixed(1)}, Y σ=${yd.toFixed(1)}px). Humans always vary.`);
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+function warnAC(msg) {
+  if (AC.warned) return;
+  AC.warned = true;
+  const t = document.createElement('div');
+  t.className = 'ac-warn-toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.remove(); AC.warned = false; }, 3000);
+}
+
+function doBan(reason, detail) {
+  stopMotion();
+  clearInterval(gameTimer);
+  gameActive = false;
+  document.getElementById('ban-reason').textContent = reason;
+  document.getElementById('ban-detail').textContent = detail;
+  shakeScreen();
+  setTimeout(() => showScreen('screen-ban'), 150);
+}
+
+// ─────────────────────────────────────────────────
+// FX
+// ─────────────────────────────────────────────────
+function launchConfetti() {
+  const colors = ['#00f5ff','#ffe600','#ff003c','#00ff88','#ffffff','#ff6a00','#aa00ff'];
+  for (let i = 0; i < 70; i++) {
+    setTimeout(() => {
+      const p = document.createElement('div');
+      p.className = 'confetti-piece';
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.top = '-10px';
+      p.style.background = colors[Math.floor(Math.random()*colors.length)];
+      p.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+      const sz = Math.random() * 8 + 4;
+      p.style.width = sz + 'px'; p.style.height = sz + 'px';
+      const dur = Math.random() * 2 + 1.5;
+      p.style.animationDuration = dur + 's';
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), dur * 1000);
+    }, i * 25);
+  }
+}
+
+function shakeScreen() {
+  document.body.style.animation = 'screenShake 0.4s ease';
+  setTimeout(() => document.body.style.animation = '', 400);
+}
+
+// ─────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────
+buildLevelsPreview();
+showScreen('screen-title');
+</script>
+</body>
+</html>
